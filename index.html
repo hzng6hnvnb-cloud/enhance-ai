@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhance AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0b0b0f;
+      color: white;
+      display: flex;
+      justify-content: center;
+      padding: 25px 15px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 850px;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 10px;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin: 0 0 10px;
+    }
+
+    .subtitle {
+      color: #aaa;
+      font-size: 16px;
+    }
+
+    .card {
+      background: #15151c;
+      border: 1px solid #292934;
+      border-radius: 22px;
+      padding: 25px;
+    }
+
+    .upload {
+      border: 2px dashed #444451;
+      border-radius: 18px;
+      padding: 50px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .upload:hover {
+      border-color: white;
+    }
+
+    .upload-icon {
+      font-size: 55px;
+      margin-bottom: 15px;
+    }
+
+    .upload h2 {
+      margin: 0 0 8px;
+    }
+
+    .upload p {
+      color: #999;
+      margin: 0;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .preview {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .preview img,
+    .preview video {
+      width: 100%;
+      max-height: 450px;
+      object-fit: contain;
+      border-radius: 15px;
+      background: #000;
+    }
+
+    .button {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 20px;
+      background: white;
+      color: black;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 18px;
+      color: #aaa;
+      min-height: 24px;
+    }
+
+    .result {
+      margin-top: 25px;
+      text-align: center;
+      display: none;
+    }
+
+    .result a {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 13px 22px;
+      border-radius: 12px;
+      background: white;
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 32px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header>
+      <h1>Enhance AI ✨</h1>
+      <div class="subtitle">
+        حسّن جودة صورك بالذكاء الاصطناعي
+      </div>
+    </header>
+
+    <div class="card">
+
+      <label class="upload" for="fileInput">
+        <div class="upload-icon">📁</div>
+        <h2>اختر صورة</h2>
+        <p>اضغط هنا لاختيار صورة من جهازك</p>
+      </label>
+
+      <input
+        id="fileInput"
+        type="file"
+        accept="image/*"
+      >
+
+      <div class="preview" id="preview"></div>
+
+      <button
+        class="button"
+        id="enhanceButton"
+        disabled
+      >
+        تحسين الصورة ✨
+      </button>
+
+      <div class="status" id="status"></div>
+
+      <div class="result" id="result">
+        <h2>تم تحسين الصورة ✅</h2>
+        <a id="download" href="#" target="_blank">
+          فتح الصورة المحسنة
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const enhanceButton = document.getElementById("enhanceButton");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+    const download = document.getElementById("download");
+
+    let selectedFile = null;
+
+    fileInput.addEventListener("change", () => {
+      selectedFile = fileInput.files[0];
+
+      if (!selectedFile) {
+        enhanceButton.disabled = true;
+        return;
+      }
+
+      enhanceButton.disabled = false;
+      result.style.display = "none";
+      status.textContent = "";
+
+      const url = URL.createObjectURL(selectedFile);
+
+      preview.innerHTML = `
+        <img src="${url}" alt="الصورة المختارة">
+      `;
+    });
+
+    enhanceButton.addEventListener("click", async () => {
+      if (!selectedFile) return;
+
+      enhanceButton.disabled = true;
+      status.textContent = "جاري تحسين الصورة بالذكاء الاصطناعي... ⏳";
+      result.style.display = "none";
+
+      const formData = new FormData();
+      formData.append("image", selectedFile);
+
+      try {
+        const response = await fetch("/api/enhance-image", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.url) {
+          throw new Error(data.error || "حدث خطأ");
+        }
+
+        status.textContent = "تم التحسين بنجاح ✅";
+
+        download.href = data.url;
+        result.style.display = "block";
+
+      } catch (error) {
+        console.error(error);
+        status.textContent =
+          "تعذر تحسين الصورة. تأكد من إعداد مفتاح الذكاء الاصطناعي.";
+      }
+
+      enhanceButton.disabled = false;
+    });
+  </script>
+
+</body>
+</html>
